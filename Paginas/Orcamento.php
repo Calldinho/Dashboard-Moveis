@@ -6,13 +6,30 @@
         $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Desacordo' WHERE OrcId = $id");
     }
 
-    if (isset($_POST['confirm_item'])) {
-        $id = intval($_POST['confirm_item']);
-        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Venda', OrcDataVenda = CURRENT_DATE WHERE OrcId = $id");
+    if (isset($_POST['busca-btn'])) {
+        $campPesquisa = $_POST['busca-item'] ?? '';
+
+        $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcPreco, OrcTipo,
+                   CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular
+            FROM OrcProdutos
+            JOIN CliClientes ON OrcCliente = CliId
+            WHERE (OrcNome LIKE ? OR CliNome LIKE ?)
+            AND OrcStatus = 'Orçamento'";
+
+        $stmt = $conexao->prepare($sql);
+        $like = "%$campPesquisa%";
+        $stmt->bind_param("ss", $like, $like);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
     }
 
+    if (!isset($_POST['busca-btn'])) {
     $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcPreco, OrcTipo, CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular FROM OrcProdutos JOIN CliClientes ON OrcCliente = CliId WHERE OrcStatus = 'Orçamento'";
-    $result = $conexao->query($sql);
+    $result = $conexao->query($sql); 
+       
+    }
+    
 
     if(isset($_POST['check-btn"'])){
         $id = intval($_POST['check-btn']);
@@ -20,8 +37,7 @@
         $OrcPreco = trim($_POST['ProPreco'] ?? '');
         $OrcDescricao = trim($_POST['ProDescricao'] ?? '');
         $OrcTipo = trim($_POST['itemTipo'] ?? '');
-        $OrcMaterial = trim($_POST['ProMaterial'] ?? '');
-        
+        $OrcMaterial = trim($_POST['ProMaterial'] ?? '');        
 
     }
 
@@ -64,23 +80,25 @@
              <!-- Filtros da Tabela de Vendas -->
              <div class="filters-container">
                  <div class="filter-group">
-                     <label for="canalFilter">Canal:</label>
-                     <select id="canalFilter" class="filter-select">
-                         <option value="todos">Todos</option>
-                         <option value="online">Online</option>
-                         <option value="presencial">Presencial</option>
-                     </select>
+                     <form method="POST">
+                         <label>Buscar:</label>
+                         <input type="text" name="busca-item" class="filter-select" placeholder="Pesquisar">
+                         <button type="submit" class="busca-btn" name="busca-btn"
+                             style="background:#FFFFFF;color:#000000;border:2px solid #e1e5e9;padding:11px 13px;border-radius:10px;cursor:pointer;">
+                             <i class="fas fa-search"></i>
+                         </button>
+                     </form>
                  </div>
 
                  <div class="filter-group">
-                     <label for="ordenarPor">Ordenar por:</label>
-                     <select id="ordenarPor" class="filter-select">
-                         <option value="padrao">Padrão</option>
-                         <option value="nome-asc">Nome (A-Z)</option>
-                         <option value="nome-desc">Nome (Z-A)</option>
-                         <option value="preco-asc">Preço (Menor-Maior)</option>
-                         <option value="preco-desc">Preço (Maior-Menor)</option>
-                     </select>
+                    <form method="POST">
+                     <label for="data-filtro">Data:</label>
+                     <input type="date" name="buscadata-item" class="filter-select">
+                     <button type="submit" class="buscadata-btn" name="busca-btn"
+                             style="background:#FFFFFF;color:#000000;border:2px solid #e1e5e9;padding:11px 13px;border-radius:10px;cursor:pointer;">
+                             <i class="fas fa-search"></i>
+                    </button>
+                     </form>
                  </div>
 
                  <button id="limparFiltros" class="clear-filters-btn">
@@ -207,7 +225,7 @@
                  <?php endif; ?>
                  </tbody>
                  </table>
-             </div>                                   
+             </div>
      </div>
      </div>
 
