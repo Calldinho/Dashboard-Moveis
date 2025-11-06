@@ -30,6 +30,10 @@ A aplicação oferece uma interface web dinâmica para controle de Orçamentos, 
 
 - 📊 Dashboard com indicadores e relatórios
 
+🌐 **Integração com API de CEP**
+
+Durante o cadastro de Clientes/Orçamentos o sistema permite que o usuário insira apenas o CEP. A partir desse CEP, a API de CEP retorna automaticamente a Rua Bairro e Cidade preenchendo os campos correspondentes.
+
 🗂️ **Estrutura do Projeto**
 ``` 
 /Configs/            → Arquivo de Conexão com o Banco
