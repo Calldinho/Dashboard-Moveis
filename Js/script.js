@@ -1,8 +1,25 @@
 const logoutBtn = document.getElementById("logoutBtn");
 const OrcamentoCard = document.getElementById("OrcamentoCard");
 const VendasCard = document.getElementById("vendasCard");
+const ProducaoCard = document.getElementById("ProducaoCard");
+const EntregaCard = document.getElementById("entregaCard");
+const clienteCard = document.getElementById("clienteCard");
+const configuracoesCard = document.getElementById("configuracoesCard");
+const desempenhoCard = document.getElementById("desempenhoCard");
+const receitaCard = document.getElementById("receitaCard");
+const ticketCard = document.getElementById("TicketCard");
+const vendacard = document.getElementById("vendaCard");
+const tempoCard = document.getElementById("tempoCard");
+const clientesCard = document.getElementById("clientesCard");
+const volumeCard = document.getElementById("volumeCard");
+const conversaoCard = document.getElementById("conversaoCard");
+const vendasPCard = document.getElementById("vendasPCard");
+const falhasCard = document.getElementById("falhasCard");
+const vitrineCard = document.getElementById("vitrineCard");
 const backToDashboard = document.getElementById("backToDashboard");
 const novoItemBtn = document.getElementById("novoItemBtn");
+const novoItemBtnVitrine = document.getElementById("novoItemBtnVitrine");
+const cancelarVitrineBtn = document.getElementById("cancelarVitrineBtn");
 const VoltOrca = document.getElementById("VoltOrca");
 
 if (logoutBtn) {
@@ -20,6 +37,109 @@ if (OrcamentoCard) {
 if (VendasCard) {
   VendasCard.addEventListener("click", () => {
     window.location.href = "../Paginas/Venda.php";
+  });
+}
+
+if (ProducaoCard) {
+  ProducaoCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/Producao.php";
+  });
+}
+
+if (EntregaCard) {
+  EntregaCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/Entrega.php";
+  });
+}
+
+if (clienteCard) {
+  clienteCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/Cliente.php";
+  });
+}
+
+if (desempenhoCard) {
+  desempenhoCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/Desempenho.php";
+  });
+}
+
+if (receitaCard) {
+  receitaCard.addEventListener("click", () => {
+    document.getElementById("cardReceitaDetalhes").classList.toggle("hidden");
+  });
+}
+
+if (ticketCard) {
+  ticketCard.addEventListener("click", () => {
+    document.getElementById("cardTicketDetalhe").classList.toggle("hidden");
+  });
+}
+
+if (vendacard) {
+  vendacard.addEventListener("click", () => {
+    document.getElementById("cardVendasDetalhe").classList.toggle("hidden");
+  }); 
+}
+
+if (tempoCard) {
+  tempoCard.addEventListener("click", () => {
+    document.getElementById("cardTempoDetalhe").classList.toggle("hidden");
+  });
+}
+if (clientesCard) {
+  clientesCard.addEventListener("click", () => {
+    document.getElementById("cardClientesDetalhe").classList.toggle("hidden");
+  });
+}
+
+if (volumeCard) {
+  volumeCard.addEventListener("click", () => {
+    document.getElementById("cardVolumeDetalhe").classList.toggle("hidden");
+  }); 
+}
+
+if (conversaoCard) {
+  conversaoCard.addEventListener("click", () => {
+    document.getElementById("cardConversaoDetalhe").classList.toggle("hidden");
+  });
+}
+
+if (vendasPCard) {
+  vendasPCard.addEventListener("click", () => {
+    document.getElementById("cardVendasPDetalhe").classList.toggle("hidden");
+  }); 
+}
+
+if (falhasCard) {
+  falhasCard.addEventListener("click", () => {
+    document.getElementById("cardFalhasDetalhe").classList.toggle("hidden");
+  }); 
+}
+
+
+
+
+if (configuracoesCard) {
+  configuracoesCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/Configuracao.php";
+  });
+}
+
+if (vitrineCard) {
+  vitrineCard.addEventListener("click", () => {
+    window.location.href = "../Paginas/VitrineDash.php";
+  });
+}
+if (novoItemBtnVitrine) {
+  novoItemBtnVitrine.addEventListener("click", () => {
+    document.getElementById("novoVitrineModal").classList.toggle("hidden");
+  });
+}
+
+if (cancelarVitrineBtn) {
+  cancelarVitrineBtn.addEventListener("click", () => {
+    document.getElementById("novoVitrineModal").classList.toggle("hidden");
   });
 }
 
@@ -182,7 +302,7 @@ function toggleDetalhes(botao) {
 function toggleEdit(botao) {
   const OrcDescricao = document.getElementById("OrcDescricao");
   const OrcTipo = document.getElementById("OrcTipo");
-  const OrcPreco = document.getElementById("OrcPreco")
+  const OrcPreco = document.getElementById("OrcPreco");
   const CliEmail = document.getElementById("CliEmail");
   const CliEndereco = document.getElementById("CliEndereco");
   const CliCidade = document.getElementById("CliCidade");
@@ -203,4 +323,3 @@ function toggleEdit(botao) {
     OrcDescricao.focus();
   }
 }
-
