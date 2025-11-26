@@ -1,9 +1,9 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario_logado'])) {
-    header("Location: ./Login.php");
+    session_start();
+    if (!isset($_SESSION['usuario_logado'])) {
+    header("Location: ../Login.php");
     exit();
-}
+    }
 
 ?>
 
@@ -13,7 +13,7 @@ if (!isset($_SESSION['usuario_logado'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - orçamentos</title>
+    <title>Dashboard - Controle de Negocio</title>
     <link rel="stylesheet" href="../Css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -54,16 +54,16 @@ if (!isset($_SESSION['usuario_logado'])) {
                     <p>Gerencie suas Vendas </p>
                 </div>
                 <!-- Card de Produção -->
-                <div class="dashboard-card" id="vendasCard">
+                <div class="dashboard-card" id="ProducaoCard">
                     <i class="fas fa-cogs"></i>
                     <h3>Produção</h3>
-                    <p>Gerencie sua Produção</p>
+                    <p>Controle de Produção</p>
                 </div>
                 <!-- Card de Estoque -->
-                <div class="dashboard-card" id="estoqueCard">
+                <div class="dashboard-card" id="entregaCard">
                     <i class="fas fa-boxes"></i>
-                    <h3>Estoque</h3>
-                    <p>Controle de produtos e inventário</p>
+                    <h3>Entrega</h3>
+                    <p>Controle de Entregas</p>
                 </div>
 
                 <!-- Card de Cliente -->

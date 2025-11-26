@@ -1,9 +1,22 @@
  <?php
+
+    session_start(); 
+    if (!isset($_SESSION['usuario_logado'])) {
+    header("Location: ../Login.php");
+    exit();
+    }
+    
     require_once '../Configs/Conexao.php';
+    
     // Lógica para deletar um móvel
     if (isset($_POST['delete_item'])) {
         $id = intval($_POST['delete_item']);
         $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Desacordo' WHERE OrcId = $id");
+    }
+
+    if (isset($_POST['confirm_item'])) {
+        $id = intval($_POST['confirm_item']);
+        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Venda', OrcDataVenda = CURRENT_DATE WHERE OrcId = $id");
     }
 
     if (isset($_POST['busca-btn'])) {
@@ -14,7 +27,7 @@
             FROM OrcProdutos
             JOIN CliClientes ON OrcCliente = CliId
             WHERE (OrcNome LIKE ? OR CliNome LIKE ?)
-            AND OrcStatus = 'Orçamento'";
+            AND OrcStatus = 'Orçamento' ORDER BY OrcDataInicio DESC, OrcId DESC";
 
         $stmt = $conexao->prepare($sql);
         $like = "%$campPesquisa%";
@@ -25,7 +38,7 @@
     }
 
     if (!isset($_POST['busca-btn'])) {
-    $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcPreco, OrcTipo, CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular FROM OrcProdutos JOIN CliClientes ON OrcCliente = CliId WHERE OrcStatus = 'Orçamento'";
+    $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcPreco, OrcTipo, CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular FROM OrcProdutos JOIN CliClientes ON OrcCliente = CliId WHERE OrcStatus = 'Orçamento' ORDER BY OrcDataInicio DESC, OrcId DESC";
     $result = $conexao->query($sql); 
        
     }
@@ -126,7 +139,7 @@
                              <?php while ($row = $result->fetch_assoc()): ?>
                              <tr class="sale-row" data-sale-id="<?php echo $row['OrcId']; ?>">
                                  <td><?php echo htmlspecialchars($row['OrcNome']); ?></td>
-                                 <td><?php echo number_format($row['OrcPreco'], 2, ',', '.'); ?></td>
+                                 <td>R$ <?php echo number_format($row['OrcPreco'], 2, ',', '.'); ?></td>
                                  <td><?php echo date('d/m/Y', strtotime($row['OrcDataInicio'])); ?></td>
                                  <td><?php echo htmlspecialchars($row['CliNome']); ?></td>
                                  <td>

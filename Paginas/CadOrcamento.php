@@ -1,4 +1,11 @@
 <?php
+
+session_start(); 
+if (!isset($_SESSION['usuario_logado'])) {
+    header("Location: ../Login.php");
+    exit();
+}
+
 require_once '../Configs/Conexao.php';
 
 // Variável para mensagem de sucesso
@@ -17,6 +24,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $OrcNome = trim($_POST['ProNome'] ?? '');
         $OrcPreco = trim($_POST['ProPreco'] ?? '');
+
+    if (!empty($OrcPreco)) {
+
+        $OrcPreco = str_replace(['R$', '.', ' '], '', $OrcPreco);        
+        $OrcPreco = str_replace(',', '.', $OrcPreco);        
+        $OrcPreco = floatval($OrcPreco);
+    } else {
+        $OrcPreco = 0;
+    }
+
         $OrcDescricao = trim($_POST['ProDescricao'] ?? '');
         $OrcTipo = trim($_POST['itemTipo'] ?? '');
         $OrcMaterial = trim($_POST['ProMaterial'] ?? '');

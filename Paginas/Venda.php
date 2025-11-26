@@ -1,19 +1,47 @@
  <?php
+    
+    session_start(); 
+    if (!isset($_SESSION['usuario_logado'])) {
+    header("Location: ../Login.php");
+    exit();
+    }
+    
     require_once '../Configs/Conexao.php';
     // Lógica para deletar um móvel
 
     if (isset($_POST['delete_item'])) {
         $id = intval($_POST['delete_item']);
-        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Desacordo' WHERE OrcId = $id");
+        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Cancelado' WHERE OrcId = $id");
     }
 
     if (isset($_POST['confirm_item'])) {
         $id = intval($_POST['confirm_item']);
-        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Entregue', OrcDataEntrega = CURRENT_DATE WHERE OrcId = $id");
+        $conexao->query("UPDATE OrcProdutos SET OrcStatus = 'Produção', OrcDataProdInicio = CURRENT_DATE WHERE OrcId = $id");
     }
                   
-    $sql = "SELECT OrcId, OrcNome, OrcDataVenda, OrcPreco, CliNome FROM OrcProdutos JOIN CliClientes ON OrcCliente = CliId WHERE OrcStatus IN ('Venda', 'Entregue')";
-    $result = $conexao->query($sql);
+    if (isset($_POST['busca-btn'])) {
+        $campPesquisa = $_POST['busca-item'] ?? '';
+
+        $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcPreco, OrcTipo,
+                   CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular
+            FROM OrcProdutos
+            JOIN CliClientes ON OrcCliente = CliId
+            WHERE (OrcNome LIKE ? OR CliNome LIKE ?)
+            AND OrcStatus = 'Venda' ORDER BY OrcDataInicio DESC, OrcId DESC";
+
+        $stmt = $conexao->prepare($sql);
+        $like = "%$campPesquisa%";
+        $stmt->bind_param("ss", $like, $like);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+    }
+
+    if (!isset($_POST['busca-btn'])) {
+    $sql = "SELECT OrcId, OrcNome, OrcDescricao, OrcDataInicio, OrcDataVenda, OrcPreco, OrcTipo, CliNome, CliEndereco, CliCidade, CliEmail, CliTelefone, CliCelular FROM OrcProdutos JOIN CliClientes ON OrcCliente = CliId WHERE OrcStatus = 'Venda' ORDER BY OrcDataInicio DESC, OrcId DESC";
+    $result = $conexao->query($sql); 
+       
+    }
     ?>
 
  <!DOCTYPE html>
@@ -50,23 +78,25 @@
              <!-- Filtros da Tabela de Vendas -->
              <div class="filters-container">
                  <div class="filter-group">
-                     <label for="canalFilter">Canal:</label>
-                     <select id="canalFilter" class="filter-select">
-                         <option value="todos">Todos</option>
-                         <option value="online">Online</option>
-                         <option value="presencial">Presencial</option>
-                     </select>
+                     <form method="POST">
+                         <label>Buscar:</label>
+                         <input type="text" name="busca-item" class="filter-select" placeholder="Pesquisar">
+                         <button type="submit" class="busca-btn" name="busca-btn"
+                             style="background:#FFFFFF;color:#000000;border:2px solid #e1e5e9;padding:11px 13px;border-radius:10px;cursor:pointer;">
+                             <i class="fas fa-search"></i>
+                         </button>
+                     </form>
                  </div>
 
                  <div class="filter-group">
-                     <label for="ordenarPor">Ordenar por:</label>
-                     <select id="ordenarPor" class="filter-select">
-                         <option value="padrao">Padrão</option>
-                         <option value="nome-asc">Nome (A-Z)</option>
-                         <option value="nome-desc">Nome (Z-A)</option>
-                         <option value="preco-asc">Preço (Menor-Maior)</option>
-                         <option value="preco-desc">Preço (Maior-Menor)</option>
-                     </select>
+                     <form method="POST">
+                         <label for="data-filtro">Data:</label>
+                         <input type="date" name="buscadata-item" class="filter-select">
+                         <button type="submit" class="buscadata-btn" name="busca-btn"
+                             style="background:#FFFFFF;color:#000000;border:2px solid #e1e5e9;padding:11px 13px;border-radius:10px;cursor:pointer;">
+                             <i class="fas fa-search"></i>
+                         </button>
+                     </form>
                  </div>
 
                  <button id="limparFiltros" class="clear-filters-btn">
@@ -100,7 +130,7 @@
                                  <td>
                                      <!-- Formulário para apagar o item -->
                                      <form method="post"
-                                         onsubmit="return confirm('Tem certeza que deseja confirmar este orçamento?');"
+                                         onsubmit="return confirm('Tem certeza que deseja iniciar a Produção?');"
                                          style="display:inline;">
                                          <input type="hidden" name="confirm_item" value="<?php echo $row['OrcId']; ?>">
                                          <button type="submit" class="confirm-btn"
@@ -109,7 +139,7 @@
                                          </button>
                                      </form>
                                      <form method="post"
-                                         onsubmit="return confirm('Tem certeza que deseja deletar este orçamento?');"
+                                         onsubmit="return confirm('Tem certeza que deseja deletar esta Venda?');"
                                          style="display:inline;">
                                          <input type="hidden" name="delete_item" value="<?php echo $row['OrcId']; ?>">
                                          <button type="submit" class="delete-btn"

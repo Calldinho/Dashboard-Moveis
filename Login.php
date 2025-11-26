@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $senha_digitada = $_POST['password'];
 
     //Consulta
-    $sql = "SELECT AdmSenha FROM Admusuario WHERE AdmNome = '$usuario'";
+    $sql = "SELECT AdmId, AdmSenha FROM Admusuario WHERE AdmNome = '$usuario'";
     
     $resultado = $conexao->query($sql);
 
@@ -24,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($senha_digitada, $senha_hash_banco)) {           
                      
             $_SESSION['usuario_logado'] = $usuario;
+            $_SESSION['usuario_id'] = $linha['AdmId'];
 		    header("Location: ./Paginas/Dashboard.php");
 		    exit();           
             
