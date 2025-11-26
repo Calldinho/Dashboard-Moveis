@@ -8,49 +8,50 @@
 
     require_once '../Configs/Conexao.php';
 
+    $sql = "SELECT * FROM VitItens ORDER BY VitID DESC";
+    $result = $conexao->query($sql);
+
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    if (isset($_POST['vitrineNome'])) {
+        if (isset($_POST['vitrineNome'])) {
 
-    $VitNome = trim($_POST['vitrineNome'] ?? '');
-    $Vitdescricao = trim($_POST['vitrineDesc'] ?? '');
-    $VitPreco = trim($_POST['vitrinePreco'] ?? '');
-    $VitImagem = trim($_POST['vitrineImagem'] ?? '');
+            $VitNome = trim($_POST['vitrineNome'] ?? '');
+            $VitDescricao = trim($_POST['vitrineDesc'] ?? '');
+            $VitPreco = trim($_POST['vitrinePreco'] ?? '');
+            $VitImagem = trim($_POST['vitrineImagem'] ?? '');
 
-    // Verifica se o nome e preço foram preenchidos
-    if (empty($VitNome) || empty($VitPreco)) {
-        echo "<p style='color:red;'>⚠️ Nome e preço são obrigatórios.</p>";
-        exit;
+            if (empty($VitNome) || empty($VitPreco)) {
+                echo "<p style='color:red;'>⚠️ Nome e preço são obrigatórios.</p>";
+                exit;
+            }
+
+            if (!is_numeric($VitPreco) || $VitPreco < 0) {
+                echo "<p style='color:red;'>⚠️ Preço inválido.</p>";
+                exit;
+            }
+
+            $sql = "INSERT INTO VitItens (VitNome, VitDescricao, VitPreco, VitImagem) VALUES (?, ?, ?, ?)";
+            $stmt = $conexao->prepare($sql);
+
+            if (!$stmt) {
+                die("Erro no prepare: " . $conexao->error);
+            }
+
+            $stmt->bind_param("ssds", $VitNome, $VitDescricao, $VitPreco, $VitImagem);
+
+            if ($stmt->execute()) {
+                echo "<p style='color:green;'>✅ Item inserido com sucesso!</p>";
+                header("Location: VitrineDash.php");
+                exit();
+                
+            } else {
+                echo "<p style='color:red;'>❌ Erro ao inserir: " . $stmt->error . "</p>";
+            }
+            $stmt->close();
+        }
     }
 
-    // Valida preço
-    if (!is_numeric($VitPreco) || $VitPreco < 0) {
-        echo "<p style='color:red;'>⚠️ Preço inválido.</p>";
-        exit;
-    }
 
-    // Prepara e insere
-    $sql = "INSERT INTO VitItens (VitNome, VitDescricao, VitPreco, VitImagem) VALUES (?, ?, ?, ?)";
-    $stmt = $conexao->prepare($sql);
-
-    if (!$stmt) {
-        die("Erro no prepare: " . $conexao->error);
-    }
-
-    $stmt->bind_param("ssds", $VitNome, $VitDescricao, $VitPreco, $VitImagem);
-
-    if ($stmt->execute()) {
-        echo "<p style='color:green;'>✅ Item inserido com sucesso!</p>";
-    } else {
-        echo "<p style='color:red;'>❌ Erro ao inserir: " . $stmt->error . "</p>";
-    }
-
-    $stmt->close();
-    $conexao->close();
-    }
-}
-
-   
     ?>
 
  <!DOCTYPE html>
@@ -93,7 +94,24 @@
                      <div class="vitrine-bg"></div>
                      <div class="vitrine-container">
                          <div class="vitrine-grid">
-                            
+                             <?php if ($result && $result->num_rows > 0): ?>
+                                 <?php while ($row = $result->fetch_assoc()): ?>
+                                     <div class="vitrine-card">
+                                         <img src="<?php echo $row['VitImagem']; ?>"
+                                             alt="<?php echo htmlspecialchars($row['VitNome']); ?>">
+                                         <div class="vitrine-card-body">
+                                             <div class="vitrine-card-title"><?php echo htmlspecialchars($row['VitNome']); ?>
+                                             </div>
+                                             <div class="vitrine-card-desc">
+                                                 <?php echo htmlspecialchars($row['VitDescricao']); ?>
+                                             </div>
+                                             <div class="vitrine-card-preco"><?php echo $row['VitPreco']; ?></div>
+                                             <button class="vitrine-card-btn"><i class="fas fa-shopping-cart"></i>
+                                                 Comprar</button>
+                                         </div>
+                                     </div>
+                                 <?php endwhile; ?>
+                             <?php endif; ?>
                          </div>
                      </div>
                  </div>
@@ -131,7 +149,7 @@
                      </div>
                      <div class="form-buttons">
                          <button type="button" id="cancelarVitrineBtn" class="cancel-btn">Cancelar</button>
-                         <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Salvar Item</button>
+                         <button type="submit" class="submit-btn" action=""><i class="fas fa-save"></i> Salvar Item</button>
                      </div>
                  </form>
              </div>

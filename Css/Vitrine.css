@@ -1,76 +1,74 @@
-        .vitrine-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 28px;
-            padding: 0 16px 40px 16px;
-            align-content: start;
-            width: 100%;
-            max-width: 100vw;
-            box-sizing: border-box;
-            overflow-x: hidden;
-        }
-        .vitrine-card {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .vitrine-card:hover {
-            transform: translateY(-6px) scale(1.03);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.13);
-        }
-        .vitrine-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-       .vitrine-card-body {
-            padding: 18px 20px 20px 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .vitrine-card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        .vitrine-card-desc {
-            color: #666;
-            font-size: 0.98rem;
-            margin-bottom: 12px;
-            flex: 1;
-        }
-        .vitrine-card-preco {
-            font-size: 1.1rem;
-            color: #059669;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        .vitrine-card-btn {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 0;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .vitrine-card-btn:hover {
-            background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
-        }
-        .vitrine-fim {
-            width: 100vw;
-            height: 80px;
-            background: linear-gradient(135deg,#6b7280 0%,#4b5563 100%);
-            margin: 0;
-            padding: 0;
-        }
-        
+.vitrine-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  padding: 0 16px 40px 16px;
+  align-content: start;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+.vitrine-card {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.vitrine-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.13);
+}
+.vitrine-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;  
+}
+.vitrine-card-body {
+  padding: 18px 20px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.vitrine-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+.vitrine-card-desc {
+  color: #666;
+  font-size: 0.98rem;
+  margin-bottom: 12px;
+  flex: 1;
+}
+.vitrine-card-preco {
+  font-size: 1.1rem;
+  color: #059669;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.vitrine-card-btn {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.vitrine-card-btn:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+}
+.vitrine-fim {
+  width: 100vw;
+  height: 80px;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  margin: 0;
+  padding: 0;
+}
