@@ -258,7 +258,11 @@ body {
     overflow-y: auto;
 }
 
-.dashboard.hidden {
+.Section{
+    display: block;
+}
+
+.Section.hidden {
     display: none;
 }
 
