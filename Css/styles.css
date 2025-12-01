@@ -857,15 +857,15 @@ body {
 }
 
 .kpi-change.positive {
-    color: #6b7280;
+    color: #059669; /* verde */
 }
 
 .kpi-change.negative {
-    color: #6b7280;
+    color: #ef4444; /* vermelho */
 }
 
 .kpi-change.neutral {
-    color: #6b7280;
+    color: #6b7280; /* cor padrão/neutra */
 }
 
 /* Performance Summary */

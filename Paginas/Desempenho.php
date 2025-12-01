@@ -9,6 +9,7 @@ if (!isset($_SESSION['usuario_logado'])) {
 require_once '../Configs/Conexao.php';
 
 $anoAtual = date('Y');
+$anoAnterior = $anoAtual - 1;
 
 $sql = "SELECT SUM(OrcPreco) AS totalPreco FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAtual";
 
@@ -23,13 +24,23 @@ if ($result && $row = $result->fetch_assoc()) {
 
 $totalFormatado = "R$ " . number_format($total, 2, ",", ".");
 
-$sqlClientes = "SELECT COUNT(*) AS totalClientes FROM CliClientes";
+$sqlClientes = "SELECT COUNT(*) AS totalClientes FROM CliClientes WHERE YEAR(CliCadastro) = $anoAtual";
 $resultClientes = $conexao->query($sqlClientes);
 
 $totalClientes = 0;
 if ($resultClientes) {
     $rowClientes = $resultClientes->fetch_assoc();
     $totalClientes = $rowClientes['totalClientes'] ?? 0;
+}
+
+// Total de clientes no ano anterior
+$sqlClientesPrev = "SELECT COUNT(*) AS totalClientesPrev FROM CliClientes WHERE YEAR(CliCadastro) = $anoAnterior";
+$resultClientesPrev = $conexao->query($sqlClientesPrev);
+
+$totalClientesPrev = 0;
+if ($resultClientesPrev) {
+    $rowClientesPrev = $resultClientesPrev->fetch_assoc();
+    $totalClientesPrev = $rowClientesPrev['totalClientesPrev'] ?? 0;
 }
 
 $sqlTotalVendas = "SELECT COUNT(*) AS totalVendas FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAtual";
@@ -68,13 +79,49 @@ if ($resultTicket) {
     $ticketMedioFinal = 'R$ ' . $ticketMedioFormatado;
 }
 
-$sqlVolumeProducao = "SELECT COUNT(OrcId) AS volumeProducao FROM OrcProdutos WHERE OrcStatus IN ('Produção', 'Entrega')";
+// Total de Falhas (ano atual) - MOVE ANTES das comparações
+$sqlTotalFalhas = "SELECT COUNT(OrcId) AS totalFalhas FROM OrcProdutos WHERE OrcStatus IN ('Desacordo', 'Cancelado') AND YEAR(OrcDataVenda) = $anoAtual";
+$resultFalhas = $conexao->query($sqlTotalFalhas);
+
+$totalFalhas = 0;
+if ($resultFalhas) {
+    $rowFalhas = $resultFalhas->fetch_assoc();
+    $totalFalhas = $rowFalhas['totalFalhas'] ?? 0;
+}
+
+$sqlTotalGeralCurrent = "SELECT COUNT(OrcId) AS totalGeral FROM OrcProdutos WHERE YEAR(OrcDataVenda) = $anoAtual";
+$resultGeralCurrent = $conexao->query($sqlTotalGeralCurrent);
+
+$totalGeralCurrent = 0;
+if ($resultGeralCurrent) {
+    $rowGeralCurrent = $resultGeralCurrent->fetch_assoc();
+    $totalGeralCurrent = $rowGeralCurrent['totalGeral'] ?? 0;
+}
+
+$taxaFalhaBruta = 0;
+if ($totalGeralCurrent > 0) {
+    $taxaFalhaBruta = ($totalFalhas / $totalGeralCurrent) * 100;
+    $taxaFalhaFormatada = number_format($taxaFalhaBruta, 2, ',', '.') . '%';
+}
+
+// Volume de Produção (ano atual)
+$sqlVolumeProducao = "SELECT COUNT(OrcId) AS volumeProducao FROM OrcProdutos WHERE OrcStatus IN ('Produção', 'Entrega') AND YEAR(OrcDataInicio) = $anoAtual";
 $resultVolume = $conexao->query($sqlVolumeProducao);
 
 $volumeProducao = 0;
 if ($resultVolume) {
     $rowVolume = $resultVolume->fetch_assoc();
     $volumeProducao = $rowVolume['volumeProducao'] ?? 0;
+}
+
+// Volume de Produção (ano anterior)
+$sqlVolumeProducaoPrev = "SELECT COUNT(OrcId) AS volumeProducaoPrev FROM OrcProdutos WHERE OrcStatus IN ('Produção', 'Entrega') AND YEAR(OrcDataInicio) = $anoAnterior";
+$resultVolumePrev = $conexao->query($sqlVolumeProducaoPrev);
+
+$volumeProducaoPrev = 0;
+if ($resultVolumePrev) {
+    $rowVolumePrev = $resultVolumePrev->fetch_assoc();
+    $volumeProducaoPrev = $rowVolumePrev['volumeProducaoPrev'] ?? 0;
 }
 
 $sqlVendasOnline = "SELECT COUNT(OrcId) AS totalOnline FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND OrcOnline = 1 AND YEAR(OrcDataVenda) = $anoAtual";
@@ -102,41 +149,182 @@ if ($totalGeral > 0) {
     $percentualVendasOnlineFinal = $percentualVendasOnlineFormatado . ' %';
 }
 
-$sqlTotalFalhas = "SELECT COUNT(OrcId) AS totalFalhas FROM OrcProdutos WHERE OrcStatus IN ('Desacordo', 'Cancelado')";
-$resultFalhas = $conexao->query($sqlTotalFalhas);
-
-$totalFalhas = 0;
-if ($resultFalhas) {
-    $rowFalhas = $resultFalhas->fetch_assoc();
-    $totalFalhas = $rowFalhas['totalFalhas'] ?? 0;
+// --- Valores do ano anterior (quando aplicável) ---
+// Receita ano anterior
+$sqlReceitaPrev = "SELECT SUM(OrcPreco) AS totalPrecoPrev FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultReceitaPrev = $conexao->query($sqlReceitaPrev);
+$receitaPrev = 0;
+if ($resultReceitaPrev && $row = $resultReceitaPrev->fetch_assoc()) {
+    $receitaPrev = $row['totalPrecoPrev'] ?? 0;
 }
 
-$sqlTotalGeral = "SELECT COUNT(OrcId) AS totalGeral FROM OrcProdutos";
-$resultGeral = $conexao->query($sqlTotalGeral);
-
-$totalGeral = 0;
-if ($resultGeral) {
-    $rowGeral = $resultGeral->fetch_assoc();
-    $totalGeral = $rowGeral['totalGeral'] ?? 0;
+// Ticket médio ano anterior
+$sqlTicketPrev = "SELECT AVG(OrcPreco) AS TicketMedioPrev FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultTicketPrev = $conexao->query($sqlTicketPrev);
+$ticketPrev = 0.00;
+if ($resultTicketPrev && $row = $resultTicketPrev->fetch_assoc()) {
+    $ticketPrev = $row['TicketMedioPrev'] ?? 0.00;
 }
 
-$taxaFalhaBruta = 0;
-if ($totalGeral > 0) {
-    $taxaFalhaBruta = ($totalFalhas / $totalGeral) * 100;
-    $taxaFalhaFormatada = number_format($taxaFalhaBruta, 2, ',', '.') . '%';
+// Vendas realizadas ano anterior
+$sqlVendasPrev = "SELECT COUNT(*) AS totalVendasPrev FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultVendasPrev = $conexao->query($sqlVendasPrev);
+$vendasPrev = 0;
+if ($resultVendasPrev && $row = $resultVendasPrev->fetch_assoc()) {
+    $vendasPrev = $row['totalVendasPrev'] ?? 0;
 }
 
+// Conversão ano anterior
+$sqlOportPrev = "SELECT COUNT(OrcId) AS totalOportunidadesPrev FROM OrcProdutos WHERE OrcStatus NOT IN ('Cancelado', 'Desacordo') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultOportPrev = $conexao->query($sqlOportPrev);
+$oportPrev = 0;
+if ($resultOportPrev && $row = $resultOportPrev->fetch_assoc()) {
+    $oportPrev = $row['totalOportunidadesPrev'] ?? 0;
+}
 
+$taxaConversaoPrev = null;
+if ($oportPrev > 0) {
+    $taxaConversaoPrev = ($vendasPrev / $oportPrev) * 100;
+}
 
+// Vendas online ano anterior
+$sqlOnlinePrev = "SELECT COUNT(OrcId) AS totalOnlinePrev FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND OrcOnline = 1 AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultOnlinePrev = $conexao->query($sqlOnlinePrev);
+$onlinePrev = 0;
+if ($resultOnlinePrev && $row = $resultOnlinePrev->fetch_assoc()) {
+    $onlinePrev = $row['totalOnlinePrev'] ?? 0;
+}
 
-$sql = "SELECT TIMESTAMPDIFF(DAY, OrcDataInicio, OrcDataEntrega) AS dias_diferenca FROM OrcProdutos WHERE OrcDataInicio IS NOT NULL AND OrcDataEntrega IS NOT NULL ORDER BY dias_diferenca ASC LIMIT 1";
+$totalGeralPrev = 0;
+$sqlTotalPrev = "SELECT COUNT(OrcId) AS totalGeralPrev FROM OrcProdutos WHERE OrcStatus IN ('Venda', 'Produção', 'Entrega', 'Finalizado') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultTotalPrev = $conexao->query($sqlTotalPrev);
+if ($resultTotalPrev && $row = $resultTotalPrev->fetch_assoc()) {
+    $totalGeralPrev = $row['totalGeralPrev'] ?? 0;
+}
 
-$result = $conexao->query($sql);
+$percentualVendasOnlinePrev = null;
+if ($totalGeralPrev > 0) {
+    $percentualVendasOnlinePrev = ($onlinePrev / $totalGeralPrev) * 100;
+}
 
-$menorTempo = "Sem dados"; // valor padrão
+// Taxa de falha ano anterior
+$sqlFalhasPrev = "SELECT COUNT(OrcId) AS totalFalhasPrev FROM OrcProdutos WHERE OrcStatus IN ('Desacordo', 'Cancelado') AND YEAR(OrcDataVenda) = $anoAnterior";
+$resultFalhasPrev = $conexao->query($sqlFalhasPrev);
+$falhasPrev = 0;
+if ($resultFalhasPrev && $row = $resultFalhasPrev->fetch_assoc()) {
+    $falhasPrev = $row['totalFalhasPrev'] ?? 0;
+}
 
-if ($result && $row = $result->fetch_assoc()) {
-    $menorTempo = $row['dias_diferenca'] . ' Dias';
+$taxaFalhaPrev = null;
+if ($totalGeralPrev > 0) {
+    $taxaFalhaPrev = ($falhasPrev / $totalGeralPrev) * 100;
+}
+
+// Função auxiliar de comparação (retorna classe e texto)
+function kpi_compare($current, $previous, $format = null) {
+    $cls = 'neutral';
+    $text = '';
+
+    // Se previous for NULL, tratar como 0 para exibir comparação
+    if ($previous === null) {
+        $previous = 0;
+    }
+
+    if ($current > $previous) {
+        $cls = 'positive';
+        $text = '<i class="fas fa-arrow-up"></i> Maior que ano anterior';
+    } elseif ($current < $previous) {
+        $cls = 'negative';
+        $text = '<i class="fas fa-arrow-down"></i> Menor que ano anterior';
+    } else {
+        $cls = 'neutral';
+        $text = 'Igual ao ano anterior';
+    }
+
+    return [$cls, $text];
+}
+
+// Função de comparação INVERSA para KPIs onde MENOS é melhor (ex: falhas)
+function kpi_compare_inverse($current, $previous, $format = null) {
+    $cls = 'neutral';
+    $text = '';
+
+    if ($previous === null) {
+        $previous = 0;
+    }
+
+    if ($current > $previous) {
+        // Mais falhas que antes = RUIM (vermelho/negative)
+        $cls = 'negative';
+        $text = '<i class="fas fa-arrow-up"></i> Maior que ano anterior';
+    } elseif ($current < $previous) {
+        // Menos falhas que antes = BOM (verde/positive)
+        $cls = 'positive';
+        $text = '<i class="fas fa-arrow-down"></i> Menor que ano anterior';
+    } else {
+        $cls = 'neutral';
+        $text = 'Igual ao ano anterior';
+    }
+
+    return [$cls, $text];
+}
+
+// Preparar comparações
+list($receita_change_class, $receita_change_text) = kpi_compare((float)$total, (float)$receitaPrev);
+list($ticket_change_class, $ticket_change_text) = kpi_compare((float)$ticketMedioBruto, (float)$ticketPrev);
+list($vendas_change_class, $vendas_change_text) = kpi_compare((int)$totalVendas, (int)$vendasPrev);
+
+// Lead time (menor é melhor - lógica inversa)
+$sqlMenorTempoAtual = "SELECT TIMESTAMPDIFF(DAY, OrcDataInicio, OrcDataEntrega) AS dias_diferenca FROM OrcProdutos WHERE OrcDataInicio IS NOT NULL AND OrcDataEntrega IS NOT NULL AND YEAR(OrcDataInicio) = $anoAtual ORDER BY dias_diferenca ASC LIMIT 1";
+$resultTempoAtual = $conexao->query($sqlMenorTempoAtual);
+$menorTempoAtual = null;
+if ($resultTempoAtual && $row = $resultTempoAtual->fetch_assoc()) {
+    $menorTempoAtual = $row['dias_diferenca'];
+}
+
+// Se não houver dados do ano atual, buscar o melhor geral
+if ($menorTempoAtual === null) {
+    $sqlMenorTempoGeralAtual = "SELECT TIMESTAMPDIFF(DAY, OrcDataInicio, OrcDataEntrega) AS dias_diferenca FROM OrcProdutos WHERE OrcDataInicio IS NOT NULL AND OrcDataEntrega IS NOT NULL ORDER BY dias_diferenca ASC LIMIT 1";
+    $resultTempoGeralAtual = $conexao->query($sqlMenorTempoGeralAtual);
+    if ($resultTempoGeralAtual && $row = $resultTempoGeralAtual->fetch_assoc()) {
+        $menorTempoAtual = $row['dias_diferenca'];
+    }
+}
+
+$sqlMenorTempoPrev = "SELECT TIMESTAMPDIFF(DAY, OrcDataInicio, OrcDataEntrega) AS dias_diferenca FROM OrcProdutos WHERE OrcDataInicio IS NOT NULL AND OrcDataEntrega IS NOT NULL AND YEAR(OrcDataInicio) = $anoAnterior ORDER BY dias_diferenca ASC LIMIT 1";
+$resultTempoPrev = $conexao->query($sqlMenorTempoPrev);
+$menorTempoPrev = null;
+if ($resultTempoPrev && $row = $resultTempoPrev->fetch_assoc()) {
+    $menorTempoPrev = $row['dias_diferenca'];
+}
+
+// Comparar Lead Time (invertido: menos é melhor)
+if ($menorTempoAtual !== null && $menorTempoPrev !== null) {
+    list($tempo_change_class, $tempo_change_text) = kpi_compare_inverse((int)$menorTempoAtual, (int)$menorTempoPrev);
+} else {
+    list($tempo_change_class, $tempo_change_text) = ['neutral', ''];
+}
+
+// Volume de Produção (mais é melhor)
+list($volume_change_class, $volume_change_text) = kpi_compare((int)$volumeProducao, (int)$volumeProducaoPrev);
+
+// Clientes com comparação por data de cadastro
+list($clientes_change_class, $clientes_change_text) = kpi_compare((int)$totalClientes, (int)$totalClientesPrev);
+
+$taxaAtualVal = ($taxaConversao ?? 0);
+list($conversao_change_class, $conversao_change_text) = kpi_compare($taxaAtualVal, ($taxaConversaoPrev ?? null));
+
+$vendasPAtualVal = ($percentualVendasOnlineBruto ?? 0);
+list($vendasP_change_class, $vendasP_change_text) = kpi_compare($vendasPAtualVal, ($percentualVendasOnlinePrev ?? null));
+
+// FALHAS COM LÓGICA INVERSA (menos é melhor)
+$falhaAtualVal = ($taxaFalhaBruta ?? 0);
+list($falhas_change_class, $falhas_change_text) = kpi_compare_inverse($falhaAtualVal, ($taxaFalhaPrev ?? null));
+
+// Lead Time - valor formatado para exibição
+$menorTempo = "Sem dados";
+if ($menorTempoAtual !== null) {
+    $menorTempo = $menorTempoAtual . ' Dias';
 }
 
 ?>
@@ -181,9 +369,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Receita Bruta Total</h3>
                             <div class="kpi-value"><?php echo $totalFormatado; ?></div>
-                            <div class="kpi-change positive">Valor Anual
-                                <!--<i class="fas fa-arrow-up"></i>-->
-                            </div>
+                            <div class="kpi-change <?php echo $receita_change_class; ?>"><?php echo $receita_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card inventory" id="TicketCard">
@@ -191,7 +377,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Ticket Médio</h3>
                             <div class="kpi-value"><?php echo $ticketMedioFinal; ?></div>
-                            <div class="kpi-change neutral"></div>
+                            <div class="kpi-change <?php echo $ticket_change_class; ?>"><?php echo $ticket_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card sales" id="vendaCard">
@@ -199,9 +385,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Vendas Realizadas</h3>
                             <div class="kpi-value"><?php echo $totalVendas; ?></div>
-                            <div class="kpi-change positive">Vendas Anuais
-                                <!--<i class="fas fa-arrow-up"></i>-->
-                            </div>
+                            <div class="kpi-change <?php echo $vendas_change_class; ?>"><?php echo $vendas_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card average-ticket" id="tempoCard">
@@ -209,9 +393,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Melhor Lead Time</h3>
                             <div class="kpi-value"><?php echo $menorTempo; ?></div>
-                            <div class="kpi-change positive">
-                                <!--<i class="fas fa-arrow-up"></i>-->
-                            </div>
+                            <div class="kpi-change <?php echo $tempo_change_class; ?>"><?php echo $tempo_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card customers" id="clientesCard">
@@ -219,9 +401,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Total de Clientes</h3>
                             <div class="kpi-value"><?php echo $totalClientes; ?></div>
-                            <div class="kpi-change positive">
-                                <!--<i class="fas fa-arrow-up"></i>-->
-                            </div>
+                            <div class="kpi-change <?php echo $clientes_change_class; ?>"><?php echo $clientes_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card inventory" id="volumeCard">
@@ -229,7 +409,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Volume de Produção</h3>
                             <div class="kpi-value"><?php echo $volumeProducao; ?></div>
-                            <div class="kpi-change neutral"></div>
+                            <div class="kpi-change <?php echo $volume_change_class; ?>"><?php echo $volume_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card conversion" id="conversaoCard">
@@ -237,7 +417,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Taxa de Conversão</h3>
                             <div class="kpi-value"><?php echo $taxaFinal; ?></div>
-                            <div class="kpi-change positive"></div>
+                            <div class="kpi-change <?php echo $conversao_change_class; ?>"><?php echo $conversao_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card inventory" id="vendasPCard">
@@ -245,7 +425,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>% de Vendas Online</h3>
                             <div class="kpi-value"><?php echo $percentualVendasOnlineFinal; ?></div>
-                            <div class="kpi-change neutral"></div>
+                            <div class="kpi-change <?php echo $vendasP_change_class; ?>"><?php echo $vendasP_change_text; ?></div>
                         </div>
                     </div>
                     <div class="kpi-card inventory" id="falhasCard">
@@ -253,7 +433,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         <div class="kpi-content">
                             <h3>Total de Falhas</h3>
                             <div class="kpi-value"><?php echo  $taxaFalhaFormatada; ?></div>
-                            <div class="kpi-change neutral"></div>
+                            <div class="kpi-change <?php echo $falhas_change_class; ?>"><?php echo $falhas_change_text; ?></div>
                         </div>
                     </div>
                 </div>
